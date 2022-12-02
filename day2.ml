@@ -11,28 +11,37 @@ let parse_move = function
   | "C" -> Scissors
   | _ -> failwith "Unrecognized char (move)"
 
-let parse_response = function
+let parse_response1 _ = function
   | "X" -> Rock
   | "Y" -> Paper
   | "Z" -> Scissors
   | _ -> failwith "Unrecognized char (response)"
 
-let parse_line line =
+let parse_line line parse_response =
   let split = String.split ~on:' ' line in
   match split with
   | [] -> failwith "Empty Line"
   | _ :: [] -> failwith "Too few characters"
-  | [ x; y ] -> (parse_move x, parse_response y)
+  | [ x; y ] -> (parse_move x, parse_response (parse_move x) y)
   | _ -> failwith "Too many characters"
 
-let outcome = function
-  | Rock, Scissors -> Lost
-  | Rock, Paper -> Won
-  | Paper, Rock -> Lost
-  | Paper, Scissors -> Won
-  | Scissors, Paper -> Lost
-  | Scissors, Rock -> Won
-  | _ -> Tied
+let loses_to = function Rock -> Paper | Paper -> Scissors | Scissors -> Rock
+
+let wins_against = function
+  | Rock -> Scissors
+  | Paper -> Rock
+  | Scissors -> Paper
+
+let parse_response2 m = function
+  | "X" -> wins_against m
+  | "Y" -> m
+  | "Z" -> loses_to m
+  | _ -> failwith "Unrecognized char (response)"
+
+let outcome (m, r) =
+  if phys_equal m (loses_to r) then Lost
+  else if phys_equal m (wins_against r) then Won
+  else Tied
 
 let score_round round =
   let score_for_move =
@@ -47,6 +56,9 @@ let () =
   let ic = In_channel.read_all "./input2.txt" in
   let split = String.split ~on:'\n' ic in
   let lines = List.filter ~f:(Fn.compose not String.is_empty) split in
-  let scores = List.map lines ~f:(fun l -> parse_line l |> score_round) in
-  let part_1 = List.fold_left ~init:0 ~f:( + ) scores in
-  printf "\nPart 1: %d" part_1
+  let score_fn parser l = score_round (parse_line l parser) in
+  let scores1 = List.map lines ~f:(score_fn parse_response1) in
+  let scores2 = List.map lines ~f:(score_fn parse_response2) in
+  let solution1 = List.fold_left ~init:0 ~f:( + ) scores1 in
+  let solution2 = List.fold_left ~init:0 ~f:( + ) scores2 in
+  printf "\nSolution 1: %d\nSolution 2: %d\n" solution1 solution2
