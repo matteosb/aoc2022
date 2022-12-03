@@ -53,9 +53,7 @@ let score_round round =
   score_for_move + score_for_outcome
 
 let () =
-  let ic = In_channel.read_all "./input2.txt" in
-  let split = String.split ~on:'\n' ic in
-  let lines = List.filter ~f:(Fn.compose not String.is_empty) split in
+  let lines = In_channel.read_lines "./input2.txt" in
   let score_fn parser l = score_round (parse_line l parser) in
   let scores1 = List.map lines ~f:(score_fn parse_response1) in
   let scores2 = List.map lines ~f:(score_fn parse_response2) in
