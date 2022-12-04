@@ -23,6 +23,7 @@ let score_chunk_part_2 chunk =
   let chunk_set = List.map ~f:to_char_set chunk in
   let intersection = List.reduce ~f:Set.inter chunk_set in
   score_intersection (Option.value_exn intersection)
+
 let () =
   let lines = In_channel.read_lines "./input3.txt" in
   let solution_1 =
