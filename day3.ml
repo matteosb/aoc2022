@@ -1,6 +1,8 @@
 open Base
 open Stdio
 
+(* module CharSet = Set.Make(Char);; *)
+
 let score_char c =
   if Char.is_lowercase c then Char.to_int c - 96 else Char.to_int c - 38
 
