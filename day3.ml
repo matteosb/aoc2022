@@ -1,13 +1,12 @@
-open Base
-open Stdio
+open Core 
 
-(* module CharSet = Set.Make(Char);; *)
+module CharSet = Set.Make(Char)
 
 let score_char c =
   if Char.is_lowercase c then Char.to_int c - 96 else Char.to_int c - 38
 
 let score_intersection intersection = 
-  match Set.to_list intersection with
+  match CharSet.to_list intersection with
   | [] -> failwith "Empty intersection!"
   | x :: [] -> score_char x
   | _ -> failwith "Too much overlap"
@@ -16,14 +15,14 @@ let score_line_part_1 line =
   let char_list = String.to_list line in
   let list_len = List.length char_list in
   let lhs, rhs = List.split_n char_list (list_len / 2) in
-  let lhs_set = Set.of_list (module Char) lhs in
-  let rhs_set = Set.of_list (module Char) rhs in
-  score_intersection (Set.inter lhs_set rhs_set)
+  let lhs_set = CharSet.of_list  lhs in
+  let rhs_set = CharSet.of_list  rhs in
+  score_intersection (CharSet.inter lhs_set rhs_set)
 
 let score_chunk_part_2 chunk =
-  let to_char_set l = Set.of_list (module Char) (String.to_list l) in
+  let to_char_set l = CharSet.of_list (String.to_list l) in
   let chunk_set = List.map ~f:to_char_set chunk in
-  let intersection = List.reduce ~f:Set.inter chunk_set in
+  let intersection = List.reduce ~f:CharSet.inter chunk_set in
   score_intersection (Option.value_exn intersection)
 
 let () =
