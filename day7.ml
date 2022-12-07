@@ -18,19 +18,17 @@ let parse_line line =
   | _ -> failwith "Unable to parse line"
 
 let mk_dir_name l = String.concat ~sep:"/" (List.rev l)
+let is_ls_out = function LsOutput _ -> true | _ -> false
 
-let rec build_adjacency_list inpt adj_list dir_stack =
-  let is_ls_out = function LsOutput _ -> true | _ -> false in
+let rec build_al inpt adj_list dir_stack =
   match inpt with
   | [] -> adj_list
-  | Ls :: rest ->
-      let ls_out = List.take_while ~f:is_ls_out rest in
-      let nodes = List.map ~f:extract_fs_node ls_out in
+  | Ls :: r ->
+      let nodes = List.(take_while ~f:is_ls_out r |> map ~f:extract_fs_node) in
       let al2 = Map.add_exn ~key:(mk_dir_name dir_stack) ~data:nodes adj_list in
-      build_adjacency_list (List.drop_while ~f:is_ls_out rest) al2 dir_stack
-  | Cd ".." :: rest ->
-      build_adjacency_list rest adj_list (List.drop dir_stack 1)
-  | Cd dir :: rest -> build_adjacency_list rest adj_list (dir :: dir_stack)
+      build_al (List.drop_while ~f:is_ls_out r) al2 dir_stack
+  | Cd ".." :: r -> build_al r adj_list (List.drop dir_stack 1)
+  | Cd dir :: r -> build_al r adj_list (dir :: dir_stack)
   | _ -> failwith "Shut up"
 
 let rec dir_size name adj_list =
@@ -44,22 +42,20 @@ let rec dir_size name adj_list =
 let () =
   let lines = In_channel.read_lines "./input7.txt" in
   let parsed = List.map ~f:parse_line lines in
-  let adj_list =
-    build_adjacency_list (List.drop parsed 1) AdjList.empty [ "/" ]
-  in
-  let dir_size_map =
-    AdjList.mapi ~f:(fun ~key ~data:_ -> dir_size key adj_list) adj_list
+  let adj_list = build_al (List.drop parsed 1) AdjList.empty [ "/" ] in
+  let dir_sizes =
+    AdjList.keys adj_list |> List.map ~f:(fun k -> dir_size k adj_list)
   in
   let part1 =
-    AdjList.filter ~f:(fun x -> x <= 100000) dir_size_map
-    |> AdjList.fold ~init:0 ~f:(fun ~key:_ ~data acc -> acc + data)
+    List.filter ~f:(fun x -> x <= 100000) dir_sizes
+    |> List.fold ~init:0 ~f:(fun data acc -> acc + data)
   in
-  let total_used_space = AdjList.find_exn dir_size_map "/" in
+  let total_used_space =
+    Option.value_exn (List.max_elt dir_sizes ~compare:Int.compare)
+  in
   let space_needed = 30000000 - (70000000 - total_used_space) in
-  let () = printf "t: %d, n: %d\n" total_used_space space_needed in
   let part2 =
-    AdjList.data dir_size_map
-    |> List.filter ~f:(fun x -> x >= space_needed)
+    List.filter ~f:(fun x -> x >= space_needed) dir_sizes
     |> List.min_elt ~compare:Int.compare
     |> Option.value_exn
   in
