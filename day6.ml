@@ -2,7 +2,8 @@ open! Core
 
 let first_n_unique n lst =
   if List.length lst < n then false
-  else List.take lst n |> Set.of_list (module Char) |> fun s -> Set.length s = n
+  else
+    List.take lst n |> List.find_a_dup ~compare:Char.compare |> Option.is_none
 
 let solve n signal =
   let rec loop inpt acc idx =
