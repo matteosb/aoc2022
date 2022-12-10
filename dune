@@ -17,8 +17,11 @@
   day15
   day16)
  (flags
-  (:standard -warn-error "-unused-value-declaration")
-  (:standard -warn-error "-unused-type-declaration"))
+  (:standard
+   -warn-error
+   "-unused-value-declaration"
+   -warn-error
+   "-unused-type-declaration"))
  (preprocess
   (pps ppx_deriving.show ppx_deriving.eq ppx_jane))
  (libraries stdio base re core))
