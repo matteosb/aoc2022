@@ -5,7 +5,9 @@ type obj_type = Rock | Sand
 
 let parse_input lines =
   Angstrom.(
-    let coord_p = (fun x y -> (x, y)) <$> integer_p <* char ',' <*> integer_p in
+    let coord_p =
+      (fun x y -> (x, y)) <$> integer_parser <* char ',' <*> integer_parser
+    in
     let segment_line =
       sep_by1 (string " -> ") coord_p >>| fun coords ->
       List.zip_exn (List.drop_last_exn coords) (List.drop coords 1)
@@ -33,33 +35,11 @@ let mk_init_coord_map segments =
   |> CoordMap.of_alist_exn
 
 let bounding_box coord_map =
-  CoordMap.keys coord_map
-  |> List.fold
-       ~init:((1000, 0), (-1, -1))
-       ~f:(fun ((minx, miny), (maxx, maxy)) (x, y) ->
-         let nminx = if x < minx then x else minx in
-         let nminy = if y < miny then y else miny in
-         let nmaxx = if x > maxx then x else maxx in
-         let nmaxy = if y > maxy then y else maxy in
-         ((nminx, nminy), (nmaxx, nmaxy)))
+  let (min_x, _), maxes = Coord.bounding_box @@ CoordMap.keys coord_map in
+  ((min_x, 0), maxes)
 
 let bb_contains ((min_x, min_y), (max_x, max_y)) (x, y) =
   x >= min_x && x <= max_x && y >= min_y && y <= max_y
-
-(* let draw_1 coord_map = *)
-(*   let (min_x, min_y), (max_x, max_y) = bounding_box coord_map in *)
-(*   for y = min_y - 1 to max_y + 1 do *)
-(*     for x = min_x - 1 to max_x + 1 do *)
-(*       let c = *)
-(*         match CoordMap.find coord_map (x, y) with *)
-(*         | Some Rock -> '#' *)
-(*         | Some Sand -> 'o' *)
-(*         | None -> '.' *)
-(*       in *)
-(*       Out_channel.output_char stdout c *)
-(*     done; *)
-(*     Out_channel.output_char stdout '\n' *)
-(*   done *)
 
 let candidates (x, y) = [ (x, y + 1); (x - 1, y + 1); (x + 1, y + 1) ]
 
