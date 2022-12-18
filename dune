@@ -19,6 +19,8 @@
  (flags
   (:standard
    -warn-error
+   "-unused-constructor"
+   -warn-error
    "-unused-var"
    -warn-error
    "-unused-value-declaration"
