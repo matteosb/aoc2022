@@ -2,6 +2,7 @@ open! Core
 open! Aoc
 
 type sensor_report = { sensor : Coord.t; beacon : Coord.t }
+
 let radius { sensor; beacon } = Coord.manhattan sensor beacon
 let is_in_radius c report = Coord.manhattan c report.sensor <= radius report
 

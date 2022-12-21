@@ -5,6 +5,19 @@ let integer_parser =
     take_while1 (function '-' | '0' .. '9' -> true | _ -> false)
     >>| int_of_string)
 
+let whitespace = Angstrom.take_while1 (function ' ' -> true | _ -> false)
+let pluralized_p str = Angstrom.(string str <* take_while (Char.equal 's'))
+
+let parse_input_file file p =
+  Angstrom.(
+    match
+      parse_string ~consume:Consume.All
+        (p <* many any_char <* end_of_input)
+        (In_channel.read_all file)
+    with
+    | Ok res -> res
+    | Error err -> failwith err)
+
 module Coord = struct
   type t = int * int [@@deriving compare, sexp, show, eq, hash]
 
@@ -33,10 +46,11 @@ end
 module CoordMap = Map.Make (Coord)
 module CoordSet = Set.Make (Coord)
 
-
 let range start end_ =
   let step = if start < end_ then fun x -> x + 1 else fun x -> x - 1 in
   let rec loop s acc =
     if s = end_ then s :: acc else loop (step s) (s :: acc)
   in
   if start = end_ then [ start ] else loop start []
+
+let show_sexpable = Sexp.to_string
